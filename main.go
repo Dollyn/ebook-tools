@@ -6,16 +6,20 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"os"
+	"golang.org/x/net/html"
+	"time"
+	"strings"
 )
 
 type Chapter struct{
 	Title string
 	Body string
+	next string
 }
 
 func main() {
 
-	fo, err := os.Create("mianzhuan.txt")
+	fo, err := os.Create("mianzhuan2.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -26,40 +30,55 @@ func main() {
 		}
 	}()
 
-	i := 244
+	i := "6599206"
 	for {
 		chapter := ReadChapter(i)
+		if chapter == nil {
+			break
+		}
+
 		fo.WriteString(chapter.Title)
+		fo.WriteString("\n")
 		fo.WriteString(chapter.Body)
-		break
+
+
+		fmt.Println("sleep...")
+		time.Sleep(2000 * time.Millisecond)
 	}
 
 }
 
-func ReadChapter(i int) *Chapter {
-	url := fmt.Sprintf("http://mianzhuan.wddsnxn.org/%d.html", i)
+func ReadChapter(i string) *Chapter {
+	//url := fmt.Sprintf("http://mianzhuan.wddsnxn.org/%d.html", i)
+	url := fmt.Sprintf("http://www.szzyue.com/dushu/10/10326/%s.html", i)
 	fmt.Println("reading ", url)
 	doc, err := goquery.NewDocument(url)
 	if err != nil {
 		log.Fatal(err)
+		return nil
 	}
 
 	result := &Chapter{}
 
-	title := doc.Find("body > div.site.clearfix > div > div.chaptertitle.clearfix > h1").Each(func(i int, s *goquery.Selection) {
-		fmt.Println(i)
-	})
+	title := doc.Find("#amain > dl > dd:nth-child(2) > h1")
 	result.Title = title.Text()
 
-	text := doc.Find("#BookText").Get(0)
+	text := doc.Find("#contents").Get(0)
 	node := text.FirstChild
 	for {
-		result.Body += node.Data
-		result.Body += "\n"
-		node = node.NextSibling
 		if node == nil {
 			break
 		}
+
+		if node.Type == html.TextNode {
+			text := node.Data
+			text = strings.TrimPrefix(text, "\"")
+			text = strings.TrimSuffix(text, "\"")
+			result.Body += node.Data
+			result.Body += "\n"
+		}
+		node = node.NextSibling
 	}
+	fmt.Println(result.Body)
 	return result
 }
