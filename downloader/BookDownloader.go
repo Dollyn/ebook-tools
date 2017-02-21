@@ -9,10 +9,16 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html"
+	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/encoding/unicode"
 )
 
-var decoder = simplifiedchinese.GBK.NewDecoder()
+
+type UrlMode int
+
+const Pattern UrlMode = 0
+const FullText UrlMode = 1
 
 type Chapter struct {
 	Title string
@@ -22,25 +28,41 @@ type Chapter struct {
 
 type BookDownloader struct {
 	UrlPattern string
-	ChapterPerFile int
+	Start      string
+
+	TitleSelector string
+	ContentSelector string
+	NextSelector string
+
+	GBK bool
+
+	ChapterPerFile  int
+	FileNamePattern string
 
 	fileIndex int
 	fo        *os.File
 	nextUrl   string
+
+	decoder *encoding.Decoder
 }
 
-func (d BookDownloader) DownLoad() {
+func (d *BookDownloader) DownLoad() {
 	d.fileIndex = 0
-	d.ChapterPerFile = 200
-	d.nextUrl = "5583810.html"
+	d.nextUrl = d.Start
+
+	if d.GBK {
+		d.decoder = simplifiedchinese.GBK.NewDecoder()
+	} else {
+		d.decoder = unicode.UTF8.NewDecoder()
+	}
 
 	i := 1
-	switchToNextFile(&d)
+	switchToNextFile(d)
 	fmt.Printf("%d: %s", d.fileIndex, d.fo.Name())
-	
+
 	for {
 		if i == d.ChapterPerFile {
-			switchToNextFile(&d)
+			switchToNextFile(d)
 			fmt.Printf("%d: %s", d.fileIndex, d.fo.Name())
 			i = 1
 		}
@@ -53,6 +75,7 @@ func (d BookDownloader) DownLoad() {
 		d.fo.WriteString(chapter.Title)
 		d.fo.WriteString("\n")
 		d.fo.WriteString(chapter.Body)
+		d.fo.WriteString("\n")
 
 		fmt.Println("sleep...")
 		time.Sleep(2000 * time.Millisecond)
@@ -68,7 +91,7 @@ func switchToNextFile(d *BookDownloader) {
 		d.fo.Close()
 	}
 
-	file, err := os.Create(fmt.Sprintf("mianzhuan_%d.txt", d.fileIndex))
+	file, err := os.Create(fmt.Sprintf(d.FileNamePattern, d.fileIndex))
 	fmt.Println(file.Name())
 	d.fo = file
 
@@ -78,9 +101,9 @@ func switchToNextFile(d *BookDownloader) {
 	}
 }
 
-func (d BookDownloader) readChapter(i string) *Chapter {
+func (d *BookDownloader) readChapter(i string) *Chapter {
 	//url := fmt.Sprintf("http://mianzhuan.wddsnxn.org/%d.html", i)
-	url := fmt.Sprintf("http://www.szzyue.com/dushu/10/10326/%s", i)
+	url := fmt.Sprintf(d.UrlPattern, i)
 	fmt.Println("reading ", url)
 	doc, err := goquery.NewDocument(url)
 	if err != nil {
@@ -90,13 +113,13 @@ func (d BookDownloader) readChapter(i string) *Chapter {
 
 	result := &Chapter{}
 
-	title := doc.Find("#amain > dl > dd:nth-child(2) > h1")
-	t, _ := decoder.String(title.Text())
+	title := doc.Find(d.TitleSelector)
+	t, _ := d.decoder.String(title.Text())
 	t = strings.TrimPrefix(t, "章节目录")
 	result.Title = strings.TrimSpace(t)
 	fmt.Println(result.Title)
 
-	text := doc.Find("#contents").Get(0)
+	text := doc.Find(d.ContentSelector).Get(0)
 	node := text.FirstChild
 	for {
 		if node == nil {
@@ -108,7 +131,7 @@ func (d BookDownloader) readChapter(i string) *Chapter {
 			text = strings.TrimPrefix(text, "\"")
 			text = strings.TrimSuffix(text, "\"")
 			text = strings.TrimSpace(text)
-			text, _ = decoder.String(text)
+			text, _ = d.decoder.String(text)
 			result.Body += text
 			result.Body += "\n"
 		}
@@ -116,14 +139,10 @@ func (d BookDownloader) readChapter(i string) *Chapter {
 	}
 
 	foot := ""
-	doc.Find("#footlink").First().Find("a").Each(func(i int, s *goquery.Selection) {
-		t, _ := decoder.String(s.Text())
-		if t == "下一页" {
-			foot, _ = s.Attr("href")
-		}
-	})
 
-	result.next, _ = decoder.String(foot)
+	foot, _ = doc.Find(d.NextSelector).First().Attr("href")
+
+	result.next, _ = d.decoder.String(foot)
 
 	fmt.Println(result.Body)
 	fmt.Println("next: ", result.next)
