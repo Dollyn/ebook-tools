@@ -34,12 +34,13 @@ type BookDownloader struct {
 	ContentSelector string
 	NextSelector string
 
+	FileIndex int
+
 	GBK bool
 
 	ChapterPerFile  int
 	FileNamePattern string
 
-	fileIndex int
 	fo        *os.File
 	nextUrl   string
 
@@ -47,7 +48,7 @@ type BookDownloader struct {
 }
 
 func (d *BookDownloader) DownLoad() {
-	d.fileIndex = 0
+	//d.FileIndex = 0
 	d.nextUrl = d.Start
 
 	if d.GBK {
@@ -58,12 +59,12 @@ func (d *BookDownloader) DownLoad() {
 
 	i := 1
 	switchToNextFile(d)
-	fmt.Printf("%d: %s", d.fileIndex, d.fo.Name())
+	fmt.Printf("%d: %s", d.FileIndex, d.fo.Name())
 
 	for {
 		if i == d.ChapterPerFile {
 			switchToNextFile(d)
-			fmt.Printf("%d: %s", d.fileIndex, d.fo.Name())
+			fmt.Printf("%d: %s", d.FileIndex, d.fo.Name())
 			i = 1
 		}
 
@@ -91,11 +92,11 @@ func switchToNextFile(d *BookDownloader) {
 		d.fo.Close()
 	}
 
-	file, err := os.Create(fmt.Sprintf(d.FileNamePattern, d.fileIndex))
+	file, err := os.Create(fmt.Sprintf(d.FileNamePattern, d.FileIndex))
 	fmt.Println(file.Name())
 	d.fo = file
 
-	d.fileIndex++
+	d.FileIndex++
 	if err != nil {
 		panic(err)
 	}
