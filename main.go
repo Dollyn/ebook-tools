@@ -39,16 +39,31 @@ func main() {
 	//	FileIndex: 5,
 	//	FileNamePattern: "mianzhuan_%d.txt"}
 
+	//
+	//bd := &downloader.BookDownloader{
+	//	UrlPattern: "http://www.23wxw.cc/html/33761/%s",
+	//	Start:      "9322871.html",
+	//
+	//	GBK: true,
+	//
+	//	TitleSelector:   "#wrapper > div.content_read > div > div.bookname > h1",
+	//	ContentSelector: "#content",
+	//	NextSelector:    "#wrapper > div.content_read > div > div.bottem2 > a:nth-child(4)",
+	//
+	//	ChapterPerFile:  500,
+	//	FileIndex: 1,
+	//	FileNamePattern: "wode_jipin_laoshi_%d.txt"}
+
 
 	bd := &downloader.BookDownloader{
-		UrlPattern: "http://www.23wxw.cc/html/33761/%s",
-		Start:      "9322871.html",
+		UrlPattern: "%s",
+		Start:      "http://www.biqiuge.com/book/9733/6880138.html",
 
 		GBK: true,
 
-		TitleSelector:   "#wrapper > div.content_read > div > div.bookname > h1",
+		TitleSelector:   "#box_con > div.bookname > h1",
 		ContentSelector: "#content",
-		NextSelector:    "#wrapper > div.content_read > div > div.bottem2 > a:nth-child(4)",
+		NextSelector:    "#box_con > div.bottem > a:nth-child(4)",
 
 		ChapterPerFile:  500,
 		FileIndex: 1,
