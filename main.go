@@ -27,17 +27,33 @@ func main() {
 	//	FileNamePattern: "mindiaoju_%d.txt"}
 	//bd.DownLoad()
 
+	//bd := &downloader.BookDownloader{
+	//	UrlPattern: "%s",
+	//	Start:      "http://mianzhuan.wddsnxn.org/2041.html",
+	//
+	//	TitleSelector:   "body > div.site.clearfix > div > div.chaptertitle.clearfix > h1",
+	//	ContentSelector: "#BookText",
+	//	NextSelector:    "body > div.site.clearfix > div > div:nth-child(6) > div > h2 > a:nth-child(3)",
+	//
+	//	ChapterPerFile:  300,
+	//	FileIndex: 5,
+	//	FileNamePattern: "mianzhuan_%d.txt"}
+
+
 	bd := &downloader.BookDownloader{
-		UrlPattern: "%s",
-		Start:      "http://mianzhuan.wddsnxn.org/1088.html",
+		UrlPattern: "http://www.23wxw.cc/html/33761/%s",
+		Start:      "9322871.html",
 
-		TitleSelector:   "body > div.site.clearfix > div > div.chaptertitle.clearfix > h1",
-		ContentSelector: "#BookText",
-		NextSelector:    "body > div.site.clearfix > div > div:nth-child(6) > div > h2 > a:nth-child(3)",
+		GBK: true,
 
-		ChapterPerFile:  300,
-		FileIndex: 4,
-		FileNamePattern: "mianzhuan_%d.txt"}
+		TitleSelector:   "#wrapper > div.content_read > div > div.bookname > h1",
+		ContentSelector: "#content",
+		NextSelector:    "#wrapper > div.content_read > div > div.bottem2 > a:nth-child(4)",
+
+		ChapterPerFile:  500,
+		FileIndex: 1,
+		FileNamePattern: "wode_jipin_laoshi_%d.txt"}
+
 	bd.DownLoad()
 
 }

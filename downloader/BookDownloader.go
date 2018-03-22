@@ -79,7 +79,7 @@ func (d *BookDownloader) DownLoad() {
 		d.fo.WriteString("\n")
 
 		fmt.Println("sleep...")
-		time.Sleep(2000 * time.Millisecond)
+		time.Sleep(20 * time.Millisecond)
 		d.nextUrl = chapter.next
 
 		i++
